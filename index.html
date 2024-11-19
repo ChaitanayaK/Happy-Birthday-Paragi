@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Happy Birthday!</title>
+        <link rel="icon" type="image/png" href="birthday.png">
+        <style>
+            :root {
+                --light-pink: #ffd1dc;
+                --soft-white: #fff5e6;
+                --accent-pink: #ff69b4;
+            }
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family: "Arial", sans-serif;
+                background: linear-gradient(
+                    45deg,
+                    var(--soft-white),
+                    var(--light-pink)
+                );
+                min-height: 100vh;
+                overflow: hidden;
+                position: relative;
+            }
+
+            .image-container {
+                position: absolute;
+                max-width: 250px;
+                border-radius: 15px;
+                transition: transform 0.3s ease;
+                cursor: pointer;
+            }
+
+            @media only screen and (max-width: 800px) {
+                .image-container {
+                    max-width: 150px;
+                }
+            }
+
+            @media only screen and (max-width: 600px) {
+                .image-container {
+                    max-width: 100px;
+                }
+            }
+
+            .image-container img {
+                /* border: 2px solid #ff69b4; */
+                width: 100%;
+                height: auto; /* Maintain aspect ratio */
+                border-radius: 15px;
+                transition: filter 0.3s ease;
+            }
+
+            .image-container:hover {
+                transform: scale(1.1) rotate(5deg);
+            }
+
+            .image-container img:hover {
+                filter: brightness(1.2);
+            }
+
+            .image-popup {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: none;
+                justify-content: center;
+                align-items: center;
+                z-index: 2000;
+                flex-direction: column;
+                padding: 20px;
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+
+            .image-popup img {
+                max-width: 90%;
+                max-height: 70%;
+                object-fit: contain;
+            }
+
+            .image-message {
+                color: white;
+                margin-top: 20px;
+                text-align: center;
+                max-width: 80%;
+                font-size: 18px;
+            }
+
+            .close-popup {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                color: white;
+                font-size: 30px;
+                cursor: pointer;
+            }
+
+            .music-player {
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: rgba(255, 255, 255, 0.9);
+                border-radius: 15px;
+                padding: 15px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                width: 90%;
+                max-width: 500px;
+                z-index: 1000;
+            }
+
+            .album-details {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+            .album-image {
+                width: 60px;
+                height: 60px;
+                border-radius: 10px;
+                margin-right: 15px;
+                object-fit: cover;
+            }
+
+            .song-info {
+                flex-grow: 1;
+            }
+
+            .song-info h3 {
+                margin: 0;
+                font-size: 16px;
+            }
+
+            .song-info p {
+                margin: 0;
+                color: #666;
+                font-size: 14px;
+            }
+
+            .play-pause-button {
+                border: none;
+                font-size: 30px;
+
+                cursor: pointer;
+                margin-left: auto;
+            }
+
+            .seeker {
+                display: flex;
+                align-items: center;
+            }
+
+            .seeker-time {
+                margin: 0 10px;
+                font-size: 12px;
+                min-width: 40px;
+            }
+
+            #seekerBar {
+                flex-grow: 1;
+                height: 5px;
+                background-color: var(--light-pink);
+                cursor: pointer;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="imageArea">
+            <!-- Images will be dynamically added here -->
+        </div>
+
+        <div class="image-popup" id="imagePopup">
+            <span class="close-popup" onclick="closeImagePopup()">&times;</span>
+            <img id="popupImage" src="" alt="Full Image" />
+            <div class="image-message" id="imageMessage"></div>
+            <div class="image-message" id="senderName"></div>
+        </div>
+
+        <div class="music-player">
+            <div class="album-details">
+                <img
+                    src="song/album.jpg"
+                    alt="Album Cover"
+                    class="album-image"
+                    id="albumImage"
+                />
+                <div class="song-info">
+                    <h3>Memories</h3>
+                    <p>Maroon 5</p>
+                </div>
+                <button
+                    class="play-pause-button"
+                    id="playPauseButton"
+                    onclick="togglePlayPause()"
+                >
+                    ▶️
+                </button>
+            </div>
+            <div class="seeker">
+                <span class="seeker-time" id="currentTime">0:00</span>
+                <div id="seekerBar"></div>
+                <span class="seeker-time" id="totalTime">0:00</span>
+            </div>
+            <audio
+                id="songPlayer"
+                src="song/memories.mp3"
+                autoplay
+                loop
+            ></audio>
+        </div>
+
+        <script>
+            // Dynamically create images with random positioning
+            const mediaQuery = window.matchMedia("(max-width: 600px)");
+
+            const playPauseButton = document.getElementById("playPauseButton");
+
+            function togglePlayPause() {
+                if (audio.paused) {
+                    audio.play();
+                    playPauseButton.textContent = "⏸️"; // Update to pause icon
+                } else {
+                    audio.pause();
+                    playPauseButton.textContent = "▶️"; // Update to play icon
+                }
+            }
+
+            async function loadImages() {
+                const imageArea = document.getElementById("imageArea");
+                const placedImages = [];
+
+                // Load messages.json dynamically
+                const response = await fetch("messages.json");
+                const imageMessages = await response.json();
+
+                const shuffledKeys = Object.keys(imageMessages).sort(
+                    () => Math.random() - 0.5
+                );
+
+                // Create a new object with shuffled keys
+                const randomizedImageMessages = {};
+                shuffledKeys.forEach((key) => {
+                    randomizedImageMessages[key] = imageMessages[key];
+                });
+
+                // imageMessages = randomizedImageMessages;
+
+                // Adjustments based on media query
+                const isSmallScreen = mediaQuery.matches;
+                const scaleFactor = isSmallScreen ? 3 : 1;
+
+                // Iterate over keys in the JSON object
+                Object.keys(randomizedImageMessages).forEach((path) => {
+                    const container = document.createElement("div");
+                    container.className = "image-container";
+
+                    const img = document.createElement("img");
+                    img.src = path;
+                    img.alt = "Memories";
+
+                    img.onclick = () =>
+                        openImagePopup(path, imageMessages[path]);
+
+                    container.appendChild(img);
+
+                    let randomX, randomY, randomRotation;
+
+                    // Generate position and ensure no overlap
+                    do {
+                        const containerWidth = container.offsetWidth || 250; // Account for image container width
+                        const containerHeight = container.offsetHeight || 250; // Account for image container height
+
+                        randomX =
+                            Math.random() *
+                            (window.innerWidth - containerWidth) *
+                            scaleFactor;
+                        randomY =
+                            Math.random() *
+                            (window.innerHeight - containerHeight);
+                        randomRotation = Math.random() * 30 - 15; // Random rotation between -15 and 15 degrees
+
+                        const centerX = randomX + containerWidth / 2;
+                        const centerY = randomY + containerHeight / 2;
+
+                        // Check if the new position overlaps with any placed images
+                        const overlaps = placedImages.some((placed) => {
+                            const dx = placed.centerX - centerX;
+                            const dy = placed.centerY - centerY;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            // const minDistance =
+                            // (containerWidth + placed.width) / 2; // Minimum distance to avoid overlap
+                            let minDistance;
+                            if (isSmallScreen) {
+                                minDistance =
+                                    (containerWidth + placed.width) / 7;
+                            } else {
+                                minDistance =
+                                    (containerWidth + placed.width) / 2.5;
+                            }
+
+                            return distance < minDistance;
+                        });
+
+                        if (!overlaps) {
+                            // Save the valid position
+                            placedImages.push({
+                                centerX,
+                                centerY,
+                                width: containerWidth,
+                                height: containerHeight,
+                            });
+                            break;
+                        }
+                    } while (true);
+
+                    container.style.left = `${randomX}px`;
+                    container.style.top = `${randomY}px`;
+                    container.style.transform = `rotate(${randomRotation}deg)`;
+
+                    // container.style.transform = `scale(${scaleFactor})`; // Scale the container itself for small screens
+
+                    imageArea.appendChild(container);
+                });
+            }
+
+            // Listen for screen size changes and reload images if necessary
+            mediaQuery.addEventListener("change", () => {
+                const imageArea = document.getElementById("imageArea");
+                imageArea.innerHTML = ""; // Clear existing images
+                loadImages(); // Reload images with new scaling
+            });
+
+            // Initial load
+            // loadImages();
+
+            function openImagePopup(imagePath, details) {
+                const popup = document.getElementById("imagePopup");
+                const popupImage = document.getElementById("popupImage");
+                const imageMessage = document.getElementById("imageMessage");
+                const senderName = document.getElementById("senderName");
+
+                popupImage.src = imagePath;
+
+                // Set sender and message
+                const sender = details.sender || "Unknown";
+                const message = details.message || "No message provided";
+
+                senderName.textContent = `~${sender}`;
+                imageMessage.textContent = `${message}`;
+
+                popup.style.display = "flex";
+            }
+
+            function closeImagePopup() {
+                document.getElementById("imagePopup").style.display = "none";
+            }
+
+            // Music Player Functionality
+            const audio = document.getElementById("songPlayer");
+            const seekerBar = document.getElementById("seekerBar");
+            const currentTimeEl = document.getElementById("currentTime");
+            const totalTimeEl = document.getElementById("totalTime");
+
+            audio.addEventListener("loadedmetadata", () => {
+                totalTimeEl.textContent = formatTime(audio.duration);
+            });
+
+            audio.addEventListener("timeupdate", () => {
+                const progress = (audio.currentTime / audio.duration) * 100;
+                seekerBar.style.background = `linear-gradient(to right, var(--accent-pink) ${progress}%, var(--light-pink) ${progress}%)`;
+
+                currentTimeEl.textContent = formatTime(audio.currentTime);
+            });
+
+            seekerBar.addEventListener("click", (e) => {
+                const percent = e.offsetX / seekerBar.offsetWidth;
+                audio.currentTime = percent * audio.duration;
+            });
+
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const remainingSeconds = Math.floor(seconds % 60);
+                return `${minutes}:${
+                    remainingSeconds < 10 ? "0" : ""
+                }${remainingSeconds}`;
+            }
+
+            // Initialize on page load
+            window.onload = loadImages;
+        </script>
+    </body>
+</html>
